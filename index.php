@@ -5,7 +5,7 @@ $send_name = "covid19-ul";
 $is_log = true;
 
 
-function put_log_in($data)
+function log_in($data)
 {
     global $is_log;
     if ($is_log) {
@@ -13,12 +13,46 @@ function put_log_in($data)
     }
 }
 
-function put_log_out($data)
+function log_out($data)
 {
     global $is_log;
     if ($is_log) {
         file_put_contents("tmp_out.txt", $data . "\n", FILE_APPEND);
     }
+}
+
+function log_iosUsers($data)
+{
+    global $is_log;
+    if ($is_log) {
+        file_put_contents("ios.txt", $data . "\n", FILE_APPEND);
+    }
+}
+
+function isIOS($id, $auth_token)
+{
+    $data["id"] = $id;
+    $data["auth_token"] = $auth_token;
+    $request_data = json_encode($data);
+
+    $ch = curl_init("https://chatapi.viber.com/pa/get_user_details");
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_ENCODING, "");
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $request_data);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    $arResponse = json_decode($response, true);
+
+//    log_out(PHP_EOL);
+//    log_out($response);
+
+    $ios = substr($arResponse["user"]["primary_device_os"], 0 , 2);
+    if ($ios === "iOS") {
+        log_iosUsers($arResponse["user"]["id"]);
+    }
+
 }
 
 function sendReq($data)
@@ -33,7 +67,7 @@ function sendReq($data)
                 "Columns" => 6,
                 "Rows" => 1,
                 "Text" => "🦠 Где получить полную и достоверную информацию о коронавирусе❓",
-                "Image" => "https://www.ulstu.club/viber-bot/img/Информация.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/Information.jpg",
                 "TextSize" => "regular"
             ],
             [
@@ -42,7 +76,7 @@ function sendReq($data)
                 "Columns" => 3,
                 "Rows" => 1,
                 "Text" => "Общая информация 💡",
-                "Image" => "https://www.ulstu.club/viber-bot/img/Общая.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/General.jpg",
                 "TextSize" => "regular"
             ],
             [
@@ -51,7 +85,7 @@ function sendReq($data)
                 "Columns" => 3,
                 "Rows" => 1,
                 "Text" => "Профилактика 💊",
-                "Image" => "https://www.ulstu.club/viber-bot/img/профилактика.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/profilactika.jpg",
                 "TextSize" => "regular"
             ],
             [
@@ -60,7 +94,7 @@ function sendReq($data)
                 "Columns" => 3,
                 "Rows" => 1,
                 "Text" => "Карантин дома 🛏",
-                "Image" => "https://www.ulstu.club/viber-bot/img/дома.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/home.jpg",
                 "TextSize" => "regular"
             ],
             [
@@ -69,7 +103,7 @@ function sendReq($data)
                 "Columns" => 3,
                 "Rows" => 1,
                 "Text" => "Карантин в больнице 💉",
-                "Image" => "https://www.ulstu.club/viber-bot/img/больница.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/hospital.jpg",
                 "TextSize" => "regular"
             ],
             [
@@ -78,7 +112,7 @@ function sendReq($data)
                 "Columns" => 3,
                 "Rows" => 1,
                 "Text" => "Диагностика и лечение 📊",
-                "Image" => "https://www.ulstu.club/viber-bot/img/Диагностика.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/Diagnostic.jpg",
                 "TextSize" => "regular"
             ],
             [
@@ -87,7 +121,7 @@ function sendReq($data)
                 "Columns" => 3,
                 "Rows" => 1,
                 "Text" => "Самоизоляция 🏠",
-                "Image" => "https://www.ulstu.club/viber-bot/img/самоизоляция.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/izolation.jpg",
                 "TextSize" => "regular"
             ],
             [
@@ -96,7 +130,7 @@ function sendReq($data)
                 "Columns" => 6,
                 "Rows" => 1,
                 "Text" => "Вызвать волонтера 📱",
-                "Image" => "https://www.ulstu.club/viber-bot/img/волонтер.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/volonter.jpg",
                 "TextSize" => "regular"
             ],
             [
@@ -105,22 +139,28 @@ function sendReq($data)
                 "Columns" => 6,
                 "Rows" => 1,
                 "Text" => "Видеообращение от губернатора",
-                "Image" => "https://www.ulstu.club/viber-bot/img/губернатор.jpg",
+                "Image" => "https://www.ulstu.club/viber-bot/img/gubernator.jpg",
                 "TextSize" => "regular"
             ],
         ]
     ];
 
-    $request_data = json_encode($data);
-//    put_log_out($request_data);
+//    isIOS($data["id"], $data["auth_token"]);
 
-    //here goes the curl to send data to user
+    $request_data = json_encode($data);
+//    log_in($request_data);
+
+
+//    https://chatapi.viber.com/pa/get_user_details
+//    https://chatapi.viber.com/pa/send_message
     $ch = curl_init("https://chatapi.viber.com/pa/send_message");
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_ENCODING, "");
     curl_setopt($ch, CURLOPT_POSTFIELDS, $request_data);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($ch);
+
     $err = curl_error($ch);
     curl_close($ch);
     if ($err) {
@@ -270,6 +310,7 @@ function sendMsg($sender_id, $text, $type, $tracking_data = Null, $arr_asoc = Nu
 \n📦 Доставка на дом товаров первой необходимости почтальонами.
 \nСвыше тысячи работников могут доставить нуждающимся людям продукты, которые реализуются в отделении почты, по предварительной заявке, оставленной жителями на телефон горячей линии: 8(927)828-76-62, или в службе 112
 ";
+    $data = ["id" => $sender_id];
     $data['auth_token'] = $auth_token;
     $data['receiver'] = $sender_id;
     if ($text !== null) {
@@ -316,15 +357,12 @@ function sendMsg($sender_id, $text, $type, $tracking_data = Null, $arr_asoc = Nu
     return sendReq($data);
 }
 
-function sendMsgText($sender_id, $text, $tracking_data = Null)
-{
-    return sendMsg($sender_id, $text, "text", $tracking_data);
-}
+
 
 $request = file_get_contents("php://input");
 $input = json_decode($request, true);
 
-//put_log_in($request);
+//log_out($request);
 
 $type = $input['message']['type']; //type of message received (text/picture)
 $text = $input['message']['text']; //actual message the user has sent
@@ -332,7 +370,7 @@ $sender_id = $input['sender']['id']; //unique viber id of user who sent the mess
 $sender_name = $input['sender']['name']; //name of the user who sent the message
 $subscribe_id = $input['user']['id'];
 
-//put_log_in($sender_id);
+//log_in($sender_id);
 
 if ($input['event'] == 'webhook') {
     $webhook_response['status'] = 0;
